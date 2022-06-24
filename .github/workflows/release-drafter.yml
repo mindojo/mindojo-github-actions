@@ -1,0 +1,12 @@
+name: Release Drafter
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+
+jobs:
+  release-drafter:
+    uses: ./.github/workflows/reusable_release-drafter.yml
