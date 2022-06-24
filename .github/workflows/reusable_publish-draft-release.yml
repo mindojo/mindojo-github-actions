@@ -1,0 +1,49 @@
+name: "Reusable: Bump version and release the draft release"
+
+on:
+  workflow_call:
+    inputs:
+      git_user_name:
+        required: false
+        default: 'github-actions'
+        type: string
+      git_user_email:
+        required: false
+        default: 'info@mindojo.com'
+        type: string
+
+jobs:
+  bump_version_and_publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Get latest draft release
+        id: last_release
+        uses: InsonusK/get-latest-release@v1.0.1
+        with:
+          myToken: ${{ secrets.GITHUB_TOKEN }}
+          exclude_types: "prerelease|release"
+          view_top: 1
+      - name: Bump the version and commit the changes
+        run: |
+          yarn version --no-git-tag-version --no-commit-hooks --new-version ${{ steps.last_release.outputs.tag_name }}
+      - name: Commit files
+        run: |
+          git config --local user.email "${{ inputs.git_user_email }}"
+          git config --local user.name "${{ inputs.git_user_name }}"
+          git commit -m "Bumped version to ${{ steps.last_release.outputs.tag_name }}" -a
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: master
+      - uses: eregon/publish-release@v1
+        if: ${{ success() }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.last_release.outputs.id }}

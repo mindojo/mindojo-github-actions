@@ -1,0 +1,74 @@
+name: "Reusable: Release drafter"
+
+on:
+  workflow_call:
+    inputs:
+      git_user_name:
+        required: false
+        default: 'github-actions'
+        type: string
+      git_user_email:
+        required: false
+        default: 'info@mindojo.com'
+        type: string
+
+jobs:
+  get_pr:
+    runs-on: ubuntu-latest
+    outputs:
+      pr_labels: ${{ steps.merged_pr.outputs.pr_labels }}
+    steps:
+      - name: Get merged PR labels
+        uses: 8BitJonny/gh-get-current-pr@2.1.0
+        id: merged_pr
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          sha: ${{ github.event.pull_request && github.event.pull_request.head.sha || null }}
+
+  draft_create_publish_release:
+    needs: get_pr
+    env:
+      # Publish only when it's `push` event.
+      SHOULD_PUBLISH: ${{ (contains(needs.get_pr.outputs.pr_labels, 'publish') && !github.event.pull_request) || contains(github.event.head_commit.message, 'r-publish') }}
+    runs-on: ubuntu-latest
+    steps:
+      # Drafts your next Release notes as Pull Requests are merged into "master"
+      - name: Draft or update a new release
+        id: create_release
+        uses: release-drafter/release-drafter@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Under normal circumstances, we'd separate this into a separate workflow that would run on `release` event.
+      # However, when the release is published through a third party plugin, the `release` event is not fired.
+      # Also, we're using fromJSON() because there's a bug in github actions with booleans:
+      # https://github.com/actions/runner/issues/1483
+      # Lastly, we cannot reuse the followoing code in a reusable workflow because release-drafter itself is
+      # already a reusable workflow and you cannot use a reusable workflow within another reusable workflow.
+      - name: Checkout 🛎️
+        if: ${{ success() && fromJSON(env.SHOULD_PUBLISH) }}
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Bump the version and commit the changes
+        if: ${{ success() && fromJSON(env.SHOULD_PUBLISH) }}
+        run: |
+          yarn version --no-git-tag-version --no-commit-hooks --new-version ${{ steps.create_release.outputs.tag_name }}
+      - name: Commit files
+        if: ${{ success() && fromJSON(env.SHOULD_PUBLISH) }}
+        run: |
+          git config --local user.email "${{ inputs.git_user_email }}"
+          git config --local user.name "${{ inputs.git_user_name }}"
+          git commit -m "Bumped version to ${{ steps.create_release.outputs.tag_name }}" -a
+      - name: Push changes
+        if: ${{ success() && fromJSON(env.SHOULD_PUBLISH) }}
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: master
+      - uses: eregon/publish-release@v1
+        if: ${{ success() && fromJSON(env.SHOULD_PUBLISH) }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.create_release.outputs.id }}
