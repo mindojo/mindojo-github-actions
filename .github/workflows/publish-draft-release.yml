@@ -1,0 +1,11 @@
+name: Bump version and publish a draft release
+
+on: workflow_dispatch
+
+# This job is for manual bumping of the version in the package.json file and publishing the latest draft release.
+# The version is taken from the last draft release. Don't publish the release manually using github UI because it
+# will not bump the version in package.json file before the release is published and tag is created.
+jobs:
+  bump_version_and_publish:
+    uses: ./.github/workflows/reusable_publish-draft-release.yml
+    secrets: inherit
