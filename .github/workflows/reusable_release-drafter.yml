@@ -8,8 +8,7 @@ on:
         default: 'github-actions'
         type: string
       git_user_email:
-        required: false
-        default: 'info@mindojo.com'
+        required: true
         type: string
 
 jobs:
