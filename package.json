@@ -1,0 +1,18 @@
+{
+  "name": "mindojo-github-actions",
+  "version": "0.0.0",
+  "description": "Reusable workflows & actions",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mindojo/mindojo-github-actions.git"
+  },
+  "author": "Mindojo",
+  "bugs": {
+    "url": "https://github.com/mindojo/mindojo-github-actions/issues"
+  },
+  "homepage": "https://github.com/mindojo/mindojo-github-actions#readme"
+}
