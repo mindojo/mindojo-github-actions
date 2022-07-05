@@ -1,0 +1,57 @@
+name: "Reusable: Build and save it to the dist folder"
+
+on:
+  workflow_call:
+    inputs:
+      git_user_name:
+        required: false
+        default: 'github-actions'
+        type: string
+      git_user_email:
+        required: true
+        type: string
+    secrets:
+      SSH_KEY:
+        required: false
+
+jobs:
+  build_and_save:
+    if: contains(github.event.pull_request.labels.*.name, 'publish')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Setup node 12
+        uses: actions/setup-node@v3
+        with:
+          node-version: 12.x
+          cache: yarn
+
+      - uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Install
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: yarn bundle
+
+      - name: Commit files
+        run: |
+          git status
+          git config --local user.email "${{ inputs.git_user_email }}"
+          git config --local user.name "${{ inputs.git_user_name }}"
+          [[ ! -z `git status dist -s` ]] && git add dist/* && git commit -m "Chore: Built dist" || exit 0
+
+      - name: Push changes
+        if: success()
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.event.pull_request.head.ref }}
