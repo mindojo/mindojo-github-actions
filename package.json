@@ -6,6 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "engines": {
+    "node": "12",
+    "yarn": "1.22"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mindojo/mindojo-github-actions.git"

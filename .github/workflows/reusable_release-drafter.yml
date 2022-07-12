@@ -31,6 +31,14 @@ jobs:
       SHOULD_PUBLISH: ${{ (contains(needs.get_pr.outputs.pr_labels, 'publish') && !github.event.pull_request) || contains(github.event.head_commit.message, 'r-publish') }}
     runs-on: ubuntu-latest
     steps:
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment.yml
+        # with:
+        #   package_json_path: ''
+      - name: Test environment
+        run: |
+          yarn --version
+          node --version
       # Drafts your next Release notes as Pull Requests are merged into "master"
       - name: Draft or update a new release
         id: create_release
