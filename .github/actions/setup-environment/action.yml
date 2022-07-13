@@ -30,4 +30,5 @@ runs:
         cache: yarn
 
     - name: Setup yarn
+      shell: bash
       run: yarn set version ${{ steps.yarn_version.outputs.prop }}
