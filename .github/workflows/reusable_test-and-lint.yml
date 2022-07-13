@@ -16,7 +16,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup environment
-        uses: mindojo/mindojo-github-actions/.github/actions/setup-environment@use-specific-yarn-and-node-version
+        uses: mindojo/mindojo-github-actions/.github/actions/setup-environment@master
 
       - uses: webfactory/ssh-agent@v0.5.4
         with:

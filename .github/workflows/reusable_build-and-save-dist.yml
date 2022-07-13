@@ -27,7 +27,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Setup environment
-        uses: mindojo/mindojo-github-actions/.github/actions/setup-environment@use-specific-yarn-and-node-version
+        uses: mindojo/mindojo-github-actions/.github/actions/setup-environment@master
 
       - name: Setup node 12
         uses: actions/setup-node@v3
