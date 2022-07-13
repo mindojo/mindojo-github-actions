@@ -31,29 +31,6 @@ jobs:
       SHOULD_PUBLISH: ${{ (contains(needs.get_pr.outputs.pr_labels, 'publish') && !github.event.pull_request) || contains(github.event.head_commit.message, 'r-publish') }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout 🛎️
-        uses: actions/checkout@v2
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-          ref: use-specific-yarn-and-node-version
-      - name: Output folder
-        run: |
-          git status
-          cd ./.github
-          ls
-          cd actions
-          ls
-          cd setup-environment
-          ls
-      - name: Setup environment
-        uses: ./.github/actions/setup-environment
-        # with:
-        #   package_json_path: ''
-      - name: Test environment
-        run: |
-          yarn --version
-          node --version
       # Drafts your next Release notes as Pull Requests are merged into "master"
       - name: Draft or update a new release
         id: create_release
@@ -66,6 +43,12 @@ jobs:
       # https://github.com/actions/runner/issues/1483
       # Lastly, we cannot reuse the followoing code in a reusable workflow because release-drafter itself is
       # already a reusable workflow and you cannot use a reusable workflow within another reusable workflow.
+      - name: Checkout 🛎️
+        if: ${{ success() && fromJSON(env.SHOULD_PUBLISH) }}
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
       - name: Bump the version and commit the changes
         if: ${{ success() && fromJSON(env.SHOULD_PUBLISH) }}
         run: |
