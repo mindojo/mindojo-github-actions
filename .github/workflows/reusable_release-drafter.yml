@@ -36,6 +36,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+          ref: use-specific-yarn-and-node-version
       - name: Setup environment
         uses: ./.github/actions/setup-environment
         # with:
