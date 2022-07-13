@@ -44,6 +44,8 @@ jobs:
           ls
           cd actions
           ls
+          cd setup-environment
+          ls
       - name: Setup environment
         uses: ./.github/actions/setup-environment
         # with:
