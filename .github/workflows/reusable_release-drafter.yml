@@ -37,6 +37,13 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
           ref: use-specific-yarn-and-node-version
+      - name: Output folder
+        run: |
+          git status
+          cd ./.github
+          ls
+          cd actions
+          ls
       - name: Setup environment
         uses: ./.github/actions/setup-environment
         # with:
