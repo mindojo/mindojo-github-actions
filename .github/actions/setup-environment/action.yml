@@ -24,10 +24,10 @@ runs:
         prop_path: 'engines.yarn'
 
     - name: Setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ steps.node_version.outputs.prop || 12 }}
-          cache: yarn
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ steps.node_version.outputs.prop || 12 }}
+        cache: yarn
 
     - name: Setup yarn
-        run: yarn set version ${{ steps.yarn_version.outputs.prop }}
+      run: yarn set version ${{ steps.yarn_version.outputs.prop }}
