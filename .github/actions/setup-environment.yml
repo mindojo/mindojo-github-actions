@@ -9,6 +9,10 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+
     - name: Get node version
       id: node_version
       uses: notiz-dev/github-action-json-property@2192e246737701f108a4571462b76c75e7376216
