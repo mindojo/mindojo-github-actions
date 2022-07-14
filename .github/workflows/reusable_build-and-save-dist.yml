@@ -26,11 +26,8 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.ref }}
 
-      - name: Setup node 12
-        uses: actions/setup-node@v3
-        with:
-          node-version: 12.x
-          cache: yarn
+      - name: Setup environment
+        uses: mindojo/mindojo-github-actions/.github/actions/setup-environment@master
 
       - uses: webfactory/ssh-agent@v0.5.4
         with:

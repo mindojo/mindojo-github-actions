@@ -1,0 +1,34 @@
+name: 'Setup yarn & node environment'
+
+description: 'Setup yarn & node environment based on the engines in the package.json (if they exist)'
+
+inputs:
+  package_json_path:
+    default: 'package.json'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get node version
+      id: node_version
+      uses: notiz-dev/github-action-json-property@2192e246737701f108a4571462b76c75e7376216
+      with:
+        path: ${{ inputs.package_json_path }}
+        prop_path: 'engines.node'
+
+    - name: Get yarn version
+      id: yarn_version
+      uses: notiz-dev/github-action-json-property@2192e246737701f108a4571462b76c75e7376216
+      with:
+        path: ${{ inputs.package_json_path }}
+        prop_path: 'engines.yarn'
+
+    - name: Setup node
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ steps.node_version.outputs.prop || 12 }}
+        cache: yarn
+
+    - name: Setup yarn
+      shell: bash
+      run: yarn set version ${{ steps.yarn_version.outputs.prop }}
