@@ -29,12 +29,6 @@ jobs:
       - name: Setup environment
         uses: mindojo/mindojo-github-actions/.github/actions/setup-environment@master
 
-      - name: Setup node 12
-        uses: actions/setup-node@v3
-        with:
-          node-version: 12.x
-          cache: yarn
-
       - uses: webfactory/ssh-agent@v0.5.4
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
