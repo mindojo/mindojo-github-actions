@@ -10,3 +10,6 @@ If you want to reuse the reusable config that is located at `.github/release-dra
 ```
 _extends: mindojo/mindojo-github-actions:.github/release-drafter.yml
 ```
+
+## Debugging actions
+https://github.com/actions/toolkit/blob/main/docs/action-debugging.md#step-debug-logs
