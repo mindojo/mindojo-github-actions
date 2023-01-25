@@ -25,7 +25,7 @@ jobs:
           fetch-depth: 0
       - name: Get latest draft release
         id: last_release
-        uses: erdincmdj/get-latest-release@master
+        uses: mindojo/get-latest-release@master
         with:
           myToken: ${{ secrets.GITHUB_TOKEN }}
           exclude_types: "prerelease|release"
