@@ -24,8 +24,8 @@ runs:
       uses: actions/cache@v3
       with:
         path: last_slack_sha
-        key: tasks-${{ hashFiles('last_slack_sha') }}
-        restore-keys: tasks-
+        key: tasks-${{ inputs.platform }}-${{ hashFiles('last_slack_sha') }}
+        restore-keys: tasks-${{ inputs.platform }}-
 
     # We do not check for the cache hit because the cache hit will always be false, yet
     # the cache will restore the last sha file from the `restore-keys`. So even though it hits
@@ -48,15 +48,9 @@ runs:
       shell: bash
       run: |
         LIST_OF_COMMITS=`git log --pretty=format:"%s %b" ${{ steps.retrieve_previous_sha.outputs.last_slack_sha }}..HEAD`
-        LIST_OF_JIRA_TICKETS=`echo $LIST_OF_COMMITS | python -c "import re, sys; print('\n'.join(re.findall(r'\b[A-Z][A-Z0-9_]+-[1-9][0-9]*', sys.stdin.read())))"`
-        if [ -z "$LIST_OF_JIRA_TICKETS" ]
-        then
-          FINAL_RESULT=""
-        else
-          FINAL_RESULT=`echo $LIST_OF_JIRA_TICKETS | awk '{print "• https://mindojo.atlassian.net/browse/" $0}'`
-        fi
-        echo $FINAL_RESULT
-        echo "jira_tickets=$FINAL_RESULT" >> $GITHUB_OUTPUT
+        LIST_OF_JIRA_TICKETS=`echo $LIST_OF_COMMITS | python -c "import re, sys; tasks=re.findall(r'\b[A-Z][A-Z0-9_]+-[1-9][0-9]*', sys.stdin.read()); print('\n'.join('• https://mindojo.atlassian.net/browse/'+task for task in tasks))"`
+        echo $LIST_OF_JIRA_TICKETS
+        echo "jira_tickets=$LIST_OF_JIRA_TICKETS" >> $GITHUB_OUTPUT
 
     - name: Set up the slack message
       id: slack_message_setup
