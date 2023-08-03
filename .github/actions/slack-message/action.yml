@@ -1,0 +1,127 @@
+name: Slack message
+description: Sends a Slack message with deploy info
+inputs:
+  SLACK_WEBHOOK_URL:
+    required: true
+  platform:
+    required: true
+  product:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create initial last_slack_sha file that will be replaced by the cache
+      shell: bash
+      run: git rev-parse HEAD > last_slack_sha
+
+    # Call a cache action to cache the file with the `key` set to `tasks-[file_hash]` and
+    # with the `restore-keys` set to `tasks-`. This will make sure that the previous
+    # file cache will be hit even though the new `tasks-[sha]` is different.
+    # And it will also make sure that the newly generated file will replace the old cache.
+    - name: Call a cache for the last_slack_sha file
+      id: last_slack_sha_cache
+      uses: actions/cache@v3
+      with:
+        path: last_slack_sha
+        key: tasks-${{ hashFiles('last_slack_sha') }}
+        restore-keys: tasks-
+
+    # We do not check for the cache hit because the cache hit will always be false, yet
+    # the cache will restore the last sha file from the `restore-keys`. So even though it hits
+    # the cache, it's not from the exact key and therefore cache-hit returns `false`.
+    # If it's the first time and there's no cache, then the sha is taken from the initial sha file.
+    - name: Retrieve the previous SHA
+      id: retrieve_previous_sha
+      shell: bash
+      run: |
+        echo "last_slack_sha=`cat last_slack_sha`" >> $GITHUB_OUTPUT
+
+    - name: Retrieve the current SHA and store it in the file so that it's cached for the next time
+      shell: bash
+      run: |
+        git rev-parse HEAD > last_slack_sha
+        cat last_slack_sha
+
+    - name: Get the list of commits since the last SHA and extract JIRA tasks from them
+      id: get_jira_tickets
+      shell: bash
+      run: |
+        LIST_OF_COMMITS=`git log --pretty=format:"%s %b" ${{ steps.retrieve_previous_sha.outputs.last_slack_sha }}..HEAD`
+        LIST_OF_JIRA_TICKETS=`echo $LIST_OF_COMMITS | python -c "import re, sys; print('\n'.join(re.findall(r'\b[A-Z][A-Z0-9_]+-[1-9][0-9]*', sys.stdin.read())))"`
+        if [ -z "$LIST_OF_JIRA_TICKETS" ]
+        then
+          FINAL_RESULT=""
+        else
+          FINAL_RESULT=`echo $LIST_OF_JIRA_TICKETS | awk '{print "• https://mindojo.atlassian.net/browse/" $0}'`
+        fi
+        echo $FINAL_RESULT
+        echo "jira_tickets=$FINAL_RESULT" >> $GITHUB_OUTPUT
+
+    - name: Set up the slack message
+      id: slack_message_setup
+      shell: bash
+      run: |
+        VERSION=`python3 -m json.tool ./package.json | python3 -c "import sys, json; print(json.load(sys.stdin)['version'])"`
+        BUILD_NUMBER=`git rev-list HEAD --count`
+
+        SLACK_MESSAGE=$(cat <<EOF
+        {
+          "blocks": [
+            {
+              "type": "header",
+              "text": {
+                "type": "plain_text",
+                "text": "A new build is released"
+              }
+            },
+            {
+              "type": "section",
+              "fields": [
+                {
+                  "type": "mrkdwn",
+                  "text": "*Platform*\n${{ inputs.platform }}"
+                },
+                {
+                  "type": "mrkdwn",
+                  "text": "*Build number*\n$BUILD_NUMBER"
+                }
+              ]
+            },
+            {
+              "type": "section",
+              "fields": [
+                {
+                  "type": "mrkdwn",
+                  "text": "*Product*\n${{ inputs.product }}"
+                },
+                {
+                  "type": "mrkdwn",
+                  "text": "*Version*\n$VERSION"
+                }
+              ]
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "*Released tasks*\n ${{ steps.get_jira_tickets.outputs.jira_tickets }}"
+              }
+            }
+          ]
+        }
+        EOF
+        )
+
+        echo $SLACK_MESSAGE;
+
+        echo "SLACK_MESSAGE<<EOF" >> $GITHUB_ENV
+        echo "$SLACK_MESSAGE" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+
+    - uses: slackapi/slack-github-action@v1.24.0
+      env:
+        SLACK_WEBHOOK_URL: ${{ inputs.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+      with:
+        payload: ${{ env.SLACK_MESSAGE }}
