@@ -48,10 +48,9 @@ runs:
       shell: bash
       run: |
         LIST_OF_COMMITS=`git log --pretty=format:"%s %b" ${{ steps.retrieve_previous_sha.outputs.last_slack_sha }}..HEAD`
-        LIST_OF_JIRA_TICKETS=`echo $LIST_OF_COMMITS | python -c "import re, sys; tasks=re.findall(r'\b[A-Z][A-Z0-9_]+-[1-9][0-9]*', sys.stdin.read()); print('\n'.join('• https://mindojo.atlassian.net/browse/'+task for task in tasks))"`
-        UNIQUE_LIST_OF_JIRA_TICKETS=`echo $LIST_OF_JIRA_TICKETS | sort | uniq`
-        echo $UNIQUE_LIST_OF_JIRA_TICKETS
-        printf 'jira_tickets=%s' "$UNIQUE_LIST_OF_JIRA_TICKETS" >> $GITHUB_OUTPUT
+        LIST_OF_JIRA_TICKETS=`echo $LIST_OF_COMMITS | python -c "import re, sys; tasks=re.findall(r'\b[A-Z][A-Z0-9_]+-[1-9][0-9]*', sys.stdin.read()); tasks=set(tasks); print('\n'.join('• https://mindojo.atlassian.net/browse/'+task for task in tasks))"`
+        LIST_OF_JIRA_TICKETS="${LIST_OF_JIRA_TICKETS//$'\n'/'%0A'}"
+        printf 'jira_tickets=%s' "$LIST_OF_JIRA_TICKETS" >> $GITHUB_OUTPUT
 
     - name: Set up the slack message
       id: slack_message_setup
