@@ -24,8 +24,8 @@ runs:
       uses: actions/cache@v3
       with:
         path: last_slack_sha
-        key: tasks-${{ inputs.platform }}-${{ github.ref_name }}-${{ hashFiles('last_slack_sha') }}
-        restore-keys: tasks-${{ inputs.platform }}-${{ github.ref_name }}-
+        key: tasks-${{ inputs.platform }}-${{ inputs.product }}-${{ github.ref_name }}-${{ hashFiles('last_slack_sha') }}
+        restore-keys: tasks-${{ inputs.platform }}-${{ inputs.product }}-${{ github.ref_name }}-
 
     # We do not check for the cache hit because the cache hit will always be false, yet
     # the cache will restore the last sha file from the `restore-keys`. So even though it hits
