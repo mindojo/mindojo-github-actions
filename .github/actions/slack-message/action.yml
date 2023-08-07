@@ -58,6 +58,8 @@ runs:
       run: |
         VERSION=`python3 -m json.tool ./package.json | python3 -c "import sys, json; print(json.load(sys.stdin)['version'])"`
         BUILD_NUMBER=`git rev-list HEAD --count`
+        LIST_OF_JIRA_TICKETS="${{ steps.get_jira_tickets.outputs.jira_tickets }}"
+        JIRA_TICKETS="${LIST_OF_JIRA_TICKETS//$'--'/\\n}"
 
         SLACK_MESSAGE=$(cat <<EOF
         {
@@ -99,7 +101,7 @@ runs:
               "type": "section",
               "text": {
                 "type": "mrkdwn",
-                "text": "*Released tasks*\n ${{ steps.get_jira_tickets.outputs.jira_tickets }}"
+                "text": "*Released tasks*\n $JIRA_TICKETS"
               }
             }
           ]
