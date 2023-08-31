@@ -7,6 +7,9 @@ inputs:
     required: true
   product:
     required: true
+  environment:
+    required: false
+    default: PROD
 
 runs:
   using: "composite"
@@ -96,6 +99,13 @@ runs:
                   "text": "*Version*\n$VERSION"
                 }
               ]
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "*Environment*\n ${{ inputs.environment }}"
+              }
             },
             {
               "type": "section",
