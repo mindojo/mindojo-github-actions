@@ -31,4 +31,4 @@ runs:
 
     - name: Setup yarn
       shell: bash
-      run: yarn set version ${{ steps.yarn_version.outputs.prop || 1.x }}
+      run: yarn set version ${{ steps.yarn_version.outputs.prop || 1 }}
