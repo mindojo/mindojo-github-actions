@@ -17,6 +17,7 @@ runs:
         prop_path: 'engines.node'
 
     - name: Get yarn version
+      if: always()
       id: yarn_version
       uses: notiz-dev/github-action-json-property@2192e246737701f108a4571462b76c75e7376216
       with:
@@ -24,11 +25,13 @@ runs:
         prop_path: 'engines.yarn'
 
     - name: Setup node
+      if: always()
       uses: actions/setup-node@v3
       with:
         node-version: ${{ steps.node_version.outputs.prop || 18 }}
         cache: yarn
 
     - name: Setup yarn
+      if: always()
       shell: bash
       run: yarn set version ${{ steps.yarn_version.outputs.prop || 1 }}
