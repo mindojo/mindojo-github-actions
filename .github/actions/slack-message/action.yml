@@ -24,7 +24,8 @@ runs:
         VERSION=`python3 -m json.tool ./package.json | python3 -c "import sys, json; print(json.load(sys.stdin)['version'])"`
         BUILD_NUMBER=`git rev-list HEAD --count`
         LIST_OF_JIRA_TICKETS="${{ inputs.jira_tickets }}"
-        JIRA_TICKETS=`echo $LIST_OF_JIRA_TICKETS | python3 -c "import sys; tickets=sys.stdin.read().split('--'); tickets=('• ' + ticket for ticket in tickets); print('\\n'.join(tickets))"`
+        JIRA_TICKETS=`echo $LIST_OF_JIRA_TICKETS | python3 -c "import sys; tickets=sys.stdin.read().split('--'); tickets=('• ' + ticket for ticket in tickets); print('--'.join(tickets))"`
+        JIRA_TICKETS="${JIRA_TICKETS//$'--'/\\n}"
 
         SLACK_MESSAGE=$(cat <<EOF
         {
