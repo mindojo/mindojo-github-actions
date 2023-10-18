@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create deployment
-        uses: mindojo/mindojo-github-actions/.github/actions/create-deployment@feature/PD2-3983-related-tasks
+        uses: mindojo/mindojo-github-actions/.github/actions/create-deployment@master
         with:
           gh_token: ${{ secrets.GH_TOKEN }}
           state: ${{ inputs.state }}
