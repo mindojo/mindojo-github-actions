@@ -1,0 +1,39 @@
+name: Create deployment
+description: Creates deployment & updates its status (JIRA requirement)
+inputs:
+  gh_token:
+    required: true
+  state:
+    required: true
+    default: 'success'
+  pipeline:
+    description: 'Pipeline displayed in JIRA deployments, for example: deploy-student-app, deploy-authoring, deploy-rnw'
+    required: true
+    default: 'deploy-student-app'
+  log_url:
+    description: URL that will be behind the pipeline link in JIRA deployments list
+  environment:
+    description: 'Environment displayed in JIRA deployments, for example: development, staging, production'
+    required: true
+    default: 'development'
+
+runs:
+  using: "composite"
+  steps:
+    - uses: chrnorm/deployment-action@v2
+      name: Create GitHub deployment
+      id: deployment
+      with:
+        token: '${{ inputs.gh_token }}'
+        task: ${{ inputs.pipeline }}
+        log-url: ${{ inputs.log_url }}
+        environment: ${{ inputs.environment }}
+
+    - name: Update deployment status
+      if: success()
+      uses: chrnorm/deployment-status@v2
+      with:
+        token: '${{ inputs.gh_token }}'
+        log-url: ${{ inputs.log_url }}
+        deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+        state: ${{ inputs.state }}

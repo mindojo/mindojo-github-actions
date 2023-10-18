@@ -1,0 +1,41 @@
+name: "Reusable: Create deployment"
+
+on:
+  workflow_call:
+    secrets:
+      GH_TOKEN:
+        required: true
+    inputs:
+      state:
+        type: 'string'
+        required: true
+        default: 'success'
+      pipeline:
+        type: 'string'
+        description: 'Pipeline displayed in JIRA deployments, for example: deploy-student-app, deploy-authoring, deploy-rnw'
+        required: true
+        default: 'deploy-student-app'
+      log_url:
+        type: 'string'
+        description: URL that will be behind the pipeline link in JIRA deployments list
+      environment:
+        type: 'string'
+        description: 'Environment displayed in JIRA deployments, for example: development, staging, production'
+        required: true
+        default: 'development'
+
+jobs:
+  commit-related-tasks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Create deployment
+        uses: mindojo/mindojo-github-actions/.github/actions/create-deployment@master
+        with:
+          gh_token: ${{ secrets.GH_TOKEN }}
+          state: ${{ inputs.state }}
+          pipeline: ${{ inputs.pipeline }}
+          log_url: ${{ inputs.log_url }}
+          environment: ${{ inputs.environment }}

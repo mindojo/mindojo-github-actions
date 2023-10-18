@@ -1,0 +1,134 @@
+name: "Reusable: Commit related tasks"
+
+on:
+  workflow_call:
+    secrets:
+      SSH_KEY:
+        required: true
+      GH_TOKEN:
+        required: true
+
+jobs:
+  commit-related-tasks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Output after and before refs
+        shell: bash
+        run: |
+          echo "GITHUB AFTER: ${{github.event.after}}"
+          echo "GITHUB BEFORE: ${{github.event.before}}"
+
+      - name: Check out to the HEAD of the current branch
+        uses: actions/checkout@v2
+        with:
+          ref: ${{github.event.after}}
+          fetch-depth: 2
+
+      - name: Check for package.json update
+        id: check_package_json_update
+        shell: bash
+        run: |
+          if [[ `git diff --name-only ${{github.event.after}} ${{github.event.before}}` == *"package.json"* ]]; then
+            echo "package.json was updated."
+            echo "updated=1" >> $GITHUB_OUTPUT
+          else
+            echo "package.json was not updated, exiting."
+            echo "updated=0" >> $GITHUB_OUTPUT
+          fi
+
+      # to be able to access the private repos such as react-core
+      - uses: webfactory/ssh-agent@v0.5.4
+        if: ${{ steps.check_package_json_update.outputs.updated == '1' }}
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Get dependencies from the package.json for the HEAD
+        if: ${{ steps.check_package_json_update.outputs.updated == '1' }}
+        id: get_dependencies_updated
+        shell: bash
+        run: |
+          LIST_OF_DEPENDENCIES=`cat package.json | python3 -c "import json, sys; deps=json.load(sys.stdin)['dependencies']; deps=list(deps[dep] for dep in deps if dep.startswith('@mindojo/')); print('--'.join(deps))"`
+          echo $LIST_OF_DEPENDENCIES
+          echo "dependencies=$LIST_OF_DEPENDENCIES" >> $GITHUB_OUTPUT
+
+      - name: Check out to the previous commit
+        if: ${{ steps.check_package_json_update.outputs.updated == '1' }}
+        uses: actions/checkout@v2
+        with:
+          ref: ${{github.event.before}}
+
+      - name: Get dependencies from the package.json for the "before" commit
+        if: ${{ steps.check_package_json_update.outputs.updated == '1' }}
+        id: get_dependencies
+        shell: bash
+        run: |
+          LIST_OF_DEPENDENCIES=`cat package.json | python3 -c "import json, sys; deps=json.load(sys.stdin)['dependencies']; deps=list(deps[dep] for dep in deps if dep.startswith('@mindojo/')); print('--'.join(deps))"`
+          echo $LIST_OF_DEPENDENCIES
+          echo "dependencies=$LIST_OF_DEPENDENCIES" >> $GITHUB_OUTPUT
+
+      - name: Get JIRA tickets for the dependencies' changes
+        if: ${{ steps.check_package_json_update.outputs.updated == '1' }}
+        id: get_dependencies_jira_tickets
+        shell: bash
+        run: |
+          LIST_OF_DEPENDENCIES=`echo ${{ steps.get_dependencies.outputs.dependencies }} | python3 -c "import sys; print('\n'.join(sys.stdin.read().split('--')))"`
+          echo "List of old dependencies:"
+          echo $LIST_OF_DEPENDENCIES
+          LIST_OF_DEPENDENCIES_UPDATED=`echo ${{ steps.get_dependencies_updated.outputs.dependencies }} | python3 -c "import sys; print('\n'.join(sys.stdin.read().split('--')))"`
+          echo "List of updated dependencies:"
+          echo $LIST_OF_DEPENDENCIES_UPDATED
+          mkdir ./temp_deps
+          cd ./temp_deps
+          # Each item in the list is in the following format, for example:
+          # git+ssh://git@github.com:mindojo/player.git#e1841e5
+          # We need to convert it to the following format, for example:
+          # git@github.com:mindojo/player.git
+          # and then clone it and get a list of tasks between the old and updated version of the dependency.
+          FINAL_LIST_OF_JIRA_TICKETS=""
+          for DEP in $LIST_OF_DEPENDENCIES_UPDATED; do
+            DEP_VERSION=`echo $DEP | python3 -c "import sys; print(sys.stdin.read().split('#')[1])"`
+            DEP=`echo $DEP | python3 -c "import sys; print(sys.stdin.read().split('#')[0].split('git+ssh://')[1])"`
+            # Get the OLD_DEP_VERSION from the $LIST_OF_DEPENDENCIES
+            OLD_DEP_VERSION=`echo $LIST_OF_DEPENDENCIES | python3 -c "import sys; print(sys.stdin.read().split('$DEP')[1].split('#')[1].split(' ')[0])"`
+            echo "Dependency, version and its old version:"
+            echo $DEP
+            echo $DEP_VERSION
+            echo $OLD_DEP_VERSION
+            git clone $DEP
+            DEP_NAME=`echo $DEP | python3 -c "import sys; print(sys.stdin.read().split('/')[1].split('.git')[0])"`
+            cd $DEP_NAME
+            LIST_OF_COMMITS=`git log --pretty=format:"%s %b" $OLD_DEP_VERSION..$DEP_VERSION`
+            LIST_OF_JIRA_TICKETS=`echo $LIST_OF_COMMITS | python3 -c "import re, sys; tasks=re.findall(r'\b[A-Z][A-Z0-9_]+-[1-9][0-9]*', sys.stdin.read()); tasks=set(tasks); print('--'.join('https://mindojo.atlassian.net/browse/'+task for task in tasks))"`
+            echo "List of JIRA tickets for $DEP_NAME:"
+            echo $LIST_OF_JIRA_TICKETS
+            FINAL_LIST_OF_JIRA_TICKETS="${FINAL_LIST_OF_JIRA_TICKETS}${LIST_OF_JIRA_TICKETS:+--$LIST_OF_JIRA_TICKETS}"
+          done
+          echo "Final list of JIRA tickets:"
+          echo $FINAL_LIST_OF_JIRA_TICKETS
+          echo "jira_tickets=$FINAL_LIST_OF_JIRA_TICKETS" >> $GITHUB_OUTPUT
+
+      - name: Check out to the HEAD of the current branch
+        uses: actions/checkout@v2
+        with:
+          ref: ${{github.event.after}}
+
+      - name: Commit an empty commit with the tickets
+        if: ${{ steps.check_package_json_update.outputs.updated == '1' && steps.get_dependencies_jira_tickets.outputs.jira_tickets != '' }}
+        shell: bash
+        run: |
+          LIST_OF_JIRA_TICKETS="${{ steps.get_dependencies_jira_tickets.outputs.jira_tickets }}"
+          JIRA_TICKETS=`echo $LIST_OF_JIRA_TICKETS | python3 -c "import sys; tickets=sys.stdin.read().split('--'); print('\n'.join(tickets))"`
+          git config --local user.email "info@mindojo.com"
+          git config --local user.name "GitHub Actions"
+          git commit --allow-empty -m "
+          Chore: Related JIRA tickets
+          The following tickets were found in the bumped @mindojo dependencies:
+          $JIRA_TICKETS"
+          git log -1
+
+      - name: Push changes
+        if: ${{ steps.check_package_json_update.outputs.updated == '1' && steps.get_dependencies_jira_tickets.outputs.jira_tickets != '' }}
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          branch: master
