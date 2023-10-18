@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Create deployment
-        uses: mindojo/mindojo-github-actions/.github/actions/create-deployment@master
+        uses: mindojo/mindojo-github-actions/.github/actions/create-deployment@feature/PD2-3983-related-tasks
         with:
           gh_token: ${{ secrets.GH_TOKEN }}
           state: ${{ inputs.state }}
