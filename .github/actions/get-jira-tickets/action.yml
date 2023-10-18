@@ -120,3 +120,5 @@ runs:
 
     - name: Check out back to the default
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
