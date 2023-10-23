@@ -25,7 +25,7 @@ on:
         default: 'development'
 
 jobs:
-  commit-related-tasks:
+  create-deployment:
     runs-on: ubuntu-latest
     steps:
       - name: Create deployment
