@@ -42,11 +42,11 @@ runs:
               "fields": [
                 {
                   "type": "mrkdwn",
-                  "text": "*Platform*\\n${{ inputs.platform }}"
+                  "text": "*Platform*\n${{ inputs.platform }}"
                 },
                 {
                   "type": "mrkdwn",
-                  "text": "*Build number*\\n$BUILD_NUMBER"
+                  "text": "*Build number*\n$BUILD_NUMBER"
                 }
               ]
             },
@@ -55,11 +55,11 @@ runs:
               "fields": [
                 {
                   "type": "mrkdwn",
-                  "text": "*Product*\\n${{ inputs.product }}"
+                  "text": "*Product*\n${{ inputs.product }}"
                 },
                 {
                   "type": "mrkdwn",
-                  "text": "*Version*\\n$VERSION"
+                  "text": "*Version*\n$VERSION"
                 }
               ]
             },
@@ -67,14 +67,14 @@ runs:
               "type": "section",
               "text": {
                 "type": "mrkdwn",
-                "text": "*Environment*\\n ${{ inputs.environment }}"
+                "text": "*Environment*\n ${{ inputs.environment }}"
               }
             },
             {
               "type": "section",
               "text": {
                 "type": "mrkdwn",
-                "text": "*Tasks in the upcoming release*\\n <$JIRA_TICKETS|Visit JIRA>"
+                "text": "*Tasks in the upcoming release*\n <$JIRA_TICKETS|Visit JIRA>"
               }
             }
           ]
@@ -84,13 +84,15 @@ runs:
 
         echo $SLACK_MESSAGE;
 
-        echo "SLACK_MESSAGE<<EOF" >> $GITHUB_ENV
-        echo "$SLACK_MESSAGE" >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
+        curl -X POST -H 'Content-type: application/json' --data $SLACK_MESSAGE ${{ inputs.SLACK_WEBHOOK_URL }}
 
-    - uses: slackapi/slack-github-action@v1.24.0
-      env:
-        SLACK_WEBHOOK_URL: ${{ inputs.SLACK_WEBHOOK_URL }}
-        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-      with:
-        payload: ${{ env.SLACK_MESSAGE }}
+    #     echo "SLACK_MESSAGE<<EOF" >> $GITHUB_ENV
+    #     echo "$SLACK_MESSAGE" >> $GITHUB_ENV
+    #     echo "EOF" >> $GITHUB_ENV
+
+    # - uses: slackapi/slack-github-action@v1.24.0
+    #   env:
+    #     SLACK_WEBHOOK_URL: ${{ inputs.SLACK_WEBHOOK_URL }}
+    #     SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+    #   with:
+    #     payload: ${{ env.SLACK_MESSAGE }}
