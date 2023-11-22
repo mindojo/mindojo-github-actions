@@ -84,7 +84,7 @@ runs:
 
         echo $SLACK_MESSAGE;
 
-        curl -X POST -H 'Content-type: application/json' --data $SLACK_MESSAGE ${{ inputs.SLACK_WEBHOOK_URL }}
+        curl -X POST -H 'Content-type: application/json' --data "$SLACK_MESSAGE" ${{ inputs.SLACK_WEBHOOK_URL }}
 
     #     echo "SLACK_MESSAGE<<EOF" >> $GITHUB_ENV
     #     echo "$SLACK_MESSAGE" >> $GITHUB_ENV
