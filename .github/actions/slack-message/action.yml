@@ -74,7 +74,7 @@ runs:
               "type": "section",
               "text": {
                 "type": "mrkdwn",
-                "text": "*Tasks in the upcoming release*\n [Visit JIRA]($JIRA_TICKETS)"
+                "text": "*Tasks in the upcoming release*\n <$JIRA_TICKETS|Visit JIRA>"
               }
             }
           ]
