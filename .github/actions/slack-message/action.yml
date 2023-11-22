@@ -42,11 +42,11 @@ runs:
               "fields": [
                 {
                   "type": "mrkdwn",
-                  "text": "*Platform*\n${{ inputs.platform }}"
+                  "text": "*Platform*\\n${{ inputs.platform }}"
                 },
                 {
                   "type": "mrkdwn",
-                  "text": "*Build number*\n$BUILD_NUMBER"
+                  "text": "*Build number*\\n$BUILD_NUMBER"
                 }
               ]
             },
@@ -55,11 +55,11 @@ runs:
               "fields": [
                 {
                   "type": "mrkdwn",
-                  "text": "*Product*\n${{ inputs.product }}"
+                  "text": "*Product*\\n${{ inputs.product }}"
                 },
                 {
                   "type": "mrkdwn",
-                  "text": "*Version*\n$VERSION"
+                  "text": "*Version*\\n$VERSION"
                 }
               ]
             },
@@ -67,14 +67,14 @@ runs:
               "type": "section",
               "text": {
                 "type": "mrkdwn",
-                "text": "*Environment*\n ${{ inputs.environment }}"
+                "text": "*Environment*\\n ${{ inputs.environment }}"
               }
             },
             {
               "type": "section",
               "text": {
                 "type": "mrkdwn",
-                "text": "*Tasks in the upcoming release*\n <$JIRA_TICKETS|Visit JIRA>"
+                "text": "*Tasks in the upcoming release*\\n <$JIRA_TICKETS|Visit JIRA>"
               }
             }
           ]
