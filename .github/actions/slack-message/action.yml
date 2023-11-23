@@ -17,14 +17,14 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Set up the slack message
+    - name: Set up the slack message and send it
       id: slack_message_setup
       shell: bash
       run: |
         VERSION=`python3 -m json.tool ./package.json | python3 -c "import sys, json; print(json.load(sys.stdin)['version'])"`
         BUILD_NUMBER=`git rev-list HEAD --count`
         LIST_OF_JIRA_TICKETS="${{ inputs.jira_tickets }}"
-        JIRA_TICKETS=`echo $LIST_OF_JIRA_TICKETS | python3 -c "import sys; tickets=sys.stdin.read().split('--'); tickets=('• ' + ticket for ticket in tickets); print('--'.join(tickets))"`
+        JIRA_TICKETS=`echo $LIST_OF_JIRA_TICKETS | python3 -c "import sys; tickets=sys.stdin.read().split('--'); tickets=('%2C'.join(ticket for ticket in tickets)); tickets=tickets.strip(); print('https://mindojo.atlassian.net/issues/?jql=issue%20IN%20(' + tickets + ')%20order%20by%20created%20DESC')"`
         JIRA_TICKETS="${JIRA_TICKETS//$'--'/\\n}"
 
         SLACK_MESSAGE=$(cat <<EOF
@@ -74,7 +74,7 @@ runs:
               "type": "section",
               "text": {
                 "type": "mrkdwn",
-                "text": "*Tasks in the upcoming release*\n $JIRA_TICKETS"
+                "text": "*Tasks in the upcoming release*\n <$JIRA_TICKETS|Visit JIRA>"
               }
             }
           ]
@@ -84,13 +84,4 @@ runs:
 
         echo $SLACK_MESSAGE;
 
-        echo "SLACK_MESSAGE<<EOF" >> $GITHUB_ENV
-        echo "$SLACK_MESSAGE" >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
-
-    - uses: slackapi/slack-github-action@v1.24.0
-      env:
-        SLACK_WEBHOOK_URL: ${{ inputs.SLACK_WEBHOOK_URL }}
-        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-      with:
-        payload: ${{ env.SLACK_MESSAGE }}
+        curl -X POST -H 'Content-type: application/json' --data "$SLACK_MESSAGE" ${{ inputs.SLACK_WEBHOOK_URL }}

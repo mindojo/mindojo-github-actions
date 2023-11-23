@@ -5,7 +5,7 @@ inputs:
     required: true
 outputs:
   jira_tickets:
-    description: "List of JIRA tickets in the following format: \"https://mindojo.atlassian.net/browse/PD1-1234--https://mindojo.atlassian.net/browse/PD2-1235\""
+    description: "List of JIRA tickets in the following format: \"PD1-1234--PD2-1235\""
     value: ${{ steps.concat_lists.outputs.jira_tickets }}
 
 runs:
@@ -35,7 +35,7 @@ runs:
       shell: bash
       run: |
         LIST_OF_COMMITS=`git log --pretty=format:"%s %b" ${{ steps.get_latest_git_tag.outputs.tag }}..HEAD`
-        LIST_OF_JIRA_TICKETS=`echo $LIST_OF_COMMITS | python3 -c "import re, sys; tasks=re.findall(r'\b[A-Z][A-Z0-9_]+-[1-9][0-9]*', sys.stdin.read()); tasks=set(tasks); print('--'.join('https://mindojo.atlassian.net/browse/'+task for task in tasks))"`
+        LIST_OF_JIRA_TICKETS=`echo $LIST_OF_COMMITS | python3 -c "import re, sys; tasks=re.findall(r'\b[A-Z][A-Z0-9_]+-[1-9][0-9]*', sys.stdin.read()); tasks=set(tasks); print('--'.join(task for task in tasks))"`
         echo $LIST_OF_JIRA_TICKETS
         echo "jira_tickets=$LIST_OF_JIRA_TICKETS" >> $GITHUB_OUTPUT
 
@@ -91,7 +91,7 @@ runs:
           DEP_NAME=`echo $DEP | python3 -c "import sys; print(sys.stdin.read().split('/')[1].split('.git')[0])"`
           cd $DEP_NAME
           LIST_OF_COMMITS=`git log --pretty=format:"%s %b" $OLD_DEP_VERSION..$DEP_VERSION`
-          LIST_OF_JIRA_TICKETS=`echo $LIST_OF_COMMITS | python3 -c "import re, sys; tasks=re.findall(r'\b[A-Z][A-Z0-9_]+-[1-9][0-9]*', sys.stdin.read()); tasks=set(tasks); print('--'.join('https://mindojo.atlassian.net/browse/'+task for task in tasks))"`
+          LIST_OF_JIRA_TICKETS=`echo $LIST_OF_COMMITS | python3 -c "import re, sys; tasks=re.findall(r'\b[A-Z][A-Z0-9_]+-[1-9][0-9]*', sys.stdin.read()); tasks=set(tasks); print('--'.join(task for task in tasks))"`
           echo "List of JIRA tickets for $DEP_NAME:"
           echo $LIST_OF_JIRA_TICKETS
           FINAL_LIST_OF_JIRA_TICKETS="${FINAL_LIST_OF_JIRA_TICKETS}${LIST_OF_JIRA_TICKETS:+--$LIST_OF_JIRA_TICKETS}"
