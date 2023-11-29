@@ -12,6 +12,9 @@ inputs:
     default: PROD
   jira_tickets:
     required: true
+  headline:
+    required: false
+    default: A new build is released
 
 
 runs:
@@ -34,7 +37,7 @@ runs:
               "type": "header",
               "text": {
                 "type": "plain_text",
-                "text": "A new build is released"
+                "text": "${{ inputs.headline }}"
               }
             },
             {
