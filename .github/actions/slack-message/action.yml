@@ -24,7 +24,7 @@ runs:
       id: slack_message_setup
       shell: bash
       run: |
-        VERSION=`python3 -m json.tool ./package.json | python3 -c "import sys, json; print(json.load(sys.stdin)['version'])"`
+        VERSION=`git describe --tags $(git rev-list --tags --max-count=1)`
         BUILD_NUMBER=`git rev-list HEAD --count`
         LIST_OF_JIRA_TICKETS="${{ inputs.jira_tickets }}"
         JIRA_TICKETS=`echo $LIST_OF_JIRA_TICKETS | python3 -c "import sys; tickets=sys.stdin.read().split('--'); tickets=('%2C'.join(ticket for ticket in tickets)); tickets=tickets.strip(); print('https://mindojo.atlassian.net/issues/?jql=issue%20IN%20(' + tickets + ')%20order%20by%20created%20DESC')"`
