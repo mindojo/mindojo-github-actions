@@ -2,7 +2,9 @@ name: Get JIRA Tickets
 description: Retrieves JIRA tickets from the commit messages & their bodies since the last git tag. The list will also contain JIRA tickets in the addon packages such as react-core and react-ui-kit.
 inputs:
   private_keys:
-    required: true
+    default: ''
+  is_npm_repo:
+    default: true
 outputs:
   jira_tickets:
     description: "List of JIRA tickets in the following format: \"PD1-1234--PD2-1235\""
@@ -19,6 +21,7 @@ runs:
 
     # to be able to access the private repos such as react-core
     - uses: webfactory/ssh-agent@v0.5.4
+      if: ${{ inputs.private_keys != '' }}
       with:
         ssh-private-key: ${{ inputs.private_keys }}
 
@@ -40,6 +43,7 @@ runs:
         echo "jira_tickets=$LIST_OF_JIRA_TICKETS" >> $GITHUB_OUTPUT
 
     - name: Get dependencies from the package.json for the HEAD
+      if: ${{ inputs.is_npm_repo == 'true' }}
       id: get_dependencies_updated
       shell: bash
       run: |
@@ -48,11 +52,13 @@ runs:
         echo "dependencies=$LIST_OF_DEPENDENCIES" >> $GITHUB_OUTPUT
 
     - name: Check out to the latest git tag
+      if: ${{ inputs.is_npm_repo == 'true' }}
       uses: actions/checkout@v2
       with:
         ref: ${{ steps.get_latest_git_tag.outputs.tag }}
 
     - name: Get dependencies from the package.json for the latest git tag
+      if: ${{ inputs.is_npm_repo == 'true' }}
       id: get_dependencies
       shell: bash
       run: |
@@ -61,6 +67,7 @@ runs:
         echo "dependencies=$LIST_OF_DEPENDENCIES" >> $GITHUB_OUTPUT
 
     - name: Get JIRA tickets for the dependencies' changes
+      if: ${{ inputs.is_npm_repo == 'true' }}
       id: get_dependencies_jira_tickets
       shell: bash
       run: |
@@ -101,6 +108,7 @@ runs:
         echo "jira_tickets=$FINAL_LIST_OF_JIRA_TICKETS" >> $GITHUB_OUTPUT
 
     - name: Concat the lists from deps and from the host app and send them to the output
+      if: ${{ inputs.is_npm_repo == 'true' }}
       id: concat_lists
       shell: bash
       run: |
@@ -117,6 +125,14 @@ runs:
         echo "Final list of JIRA tickets without duplicates:"
         echo $FINAL_LIST_OF_JIRA_TICKETS
         echo "jira_tickets=$FINAL_LIST_OF_JIRA_TICKETS" >> $GITHUB_OUTPUT
+
+    - name: Send the list to the output
+      if: ${{ inputs.is_npm_repo != 'true' }}
+      shell: bash
+      run: |
+        LIST_OF_JIRA_TICKETS_FROM_HOST_APP="${{ steps.get_jira_tickets.outputs.jira_tickets }}"
+        echo "List of JIRA tickets from the host app:"
+        echo "jira_tickets=$LIST_OF_JIRA_TICKETS_FROM_HOST_APP" >> $GITHUB_OUTPUT
 
     - name: Check out back to the default
       uses: actions/checkout@v2
