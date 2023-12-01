@@ -132,6 +132,7 @@ runs:
       run: |
         LIST_OF_JIRA_TICKETS_FROM_HOST_APP="${{ steps.get_jira_tickets.outputs.jira_tickets }}"
         echo "List of JIRA tickets from the host app:"
+        echo $LIST_OF_JIRA_TICKETS_FROM_HOST_APP
         echo "jira_tickets=$LIST_OF_JIRA_TICKETS_FROM_HOST_APP" >> $GITHUB_OUTPUT
 
     - name: Check out back to the default
