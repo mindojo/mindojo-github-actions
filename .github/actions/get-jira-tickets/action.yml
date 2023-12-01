@@ -8,7 +8,7 @@ inputs:
 outputs:
   jira_tickets:
     description: "List of JIRA tickets in the following format: \"PD1-1234--PD2-1235\""
-    value: ${{ steps.concat_lists.outputs.jira_tickets }}
+    value: ${{ steps.concat_lists.outputs.jira_tickets || steps.send_list_to_output.outputs.jira_tickets }}
 
 runs:
   using: "composite"
@@ -127,11 +127,13 @@ runs:
         echo "jira_tickets=$FINAL_LIST_OF_JIRA_TICKETS" >> $GITHUB_OUTPUT
 
     - name: Send the list to the output
+      id: send_list_to_output
       if: ${{ inputs.is_npm_repo != 'true' }}
       shell: bash
       run: |
         LIST_OF_JIRA_TICKETS_FROM_HOST_APP="${{ steps.get_jira_tickets.outputs.jira_tickets }}"
         echo "List of JIRA tickets from the host app:"
+        echo $LIST_OF_JIRA_TICKETS_FROM_HOST_APP
         echo "jira_tickets=$LIST_OF_JIRA_TICKETS_FROM_HOST_APP" >> $GITHUB_OUTPUT
 
     - name: Check out back to the default
