@@ -111,7 +111,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           persist-credentials: false # Otherwise the "Push changes" action will fail
-          ref: ${{github.event.after}}
 
       - name: Commit an empty commit with the tickets
         if: ${{ steps.check_package_json_update.outputs.updated == '1' && steps.get_dependencies_jira_tickets.outputs.jira_tickets != '' }}
