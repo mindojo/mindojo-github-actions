@@ -92,7 +92,16 @@ runs:
           DEP=`echo $DEP | python3 -c "import sys; print(sys.stdin.read().split('#')[0].split('git+ssh://')[1])"`
           # Get the OLD_DEP_VERSION from the $LIST_OF_DEPENDENCIES
           echo "Getting the OLD_DEP_VERSION for $DEP from the list of dependencies"
-          OLD_DEP_VERSION=`echo $LIST_OF_DEPENDENCIES | python3 -c "import sys; print(sys.stdin.read().split('$DEP')[1].split('#')[1].split(' ')[0])"`
+          OLD_DEP_VERSION=`echo $LIST_OF_DEPENDENCIES | python3 -c "
+          import sys;
+          try:
+            print(sys.stdin.read().split('$DEP')[1].split('#')[1].split(' ')[0])
+          except:
+            print('')"`
+          if [ -z "$OLD_DEP_VERSION" ]; then
+              echo "No old dep version found between $LIST_OF_DEPENDENCIES for $DEP_NAME, probably the package was added in the latest version but was missing in the previous one."
+              continue  # Skip to the next dependency in the loop
+          fi
           echo "Dependency, version and its old version:"
           echo $DEP
           echo $DEP_VERSION
