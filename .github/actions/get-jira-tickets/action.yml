@@ -86,9 +86,12 @@ runs:
         # and then clone it and get a list of tasks between the old and updated version of the dependency.
         FINAL_LIST_OF_JIRA_TICKETS=""
         for DEP in $LIST_OF_DEPENDENCIES_UPDATED; do
+          echo "Getting DEP_VERSION for $DEP"
           DEP_VERSION=`echo $DEP | python3 -c "import sys; print(sys.stdin.read().split('#')[1])"`
+          echo "Retrieving the actual dependency URL for $DEP"
           DEP=`echo $DEP | python3 -c "import sys; print(sys.stdin.read().split('#')[0].split('git+ssh://')[1])"`
           # Get the OLD_DEP_VERSION from the $LIST_OF_DEPENDENCIES
+          echo "Getting the OLD_DEP_VERSION for $DEP from the list of dependencies"
           OLD_DEP_VERSION=`echo $LIST_OF_DEPENDENCIES | python3 -c "import sys; print(sys.stdin.read().split('$DEP')[1].split('#')[1].split(' ')[0])"`
           echo "Dependency, version and its old version:"
           echo $DEP
@@ -101,7 +104,6 @@ runs:
           echo $DEP_NAME
           LIST_OF_COMMITS=`git log --pretty=format:"%s %b" $OLD_DEP_VERSION..$DEP_VERSION`
           echo "List of commits:"
-          echo $LIST_OF_COMMITS
           # Check if LIST_OF_COMMITS is empty
           if [ -z "$LIST_OF_COMMITS" ]; then
               echo "No commits found between $OLD_DEP_VERSION and $DEP_VERSION for $DEP_NAME"
