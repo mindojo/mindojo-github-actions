@@ -97,7 +97,16 @@ runs:
           git clone $DEP
           DEP_NAME=`echo $DEP | python3 -c "import sys; print(sys.stdin.read().split('/')[1].split('.git')[0])"`
           cd $DEP_NAME
+          echo "Dependency name:"
+          echo $DEP_NAME
           LIST_OF_COMMITS=`git log --pretty=format:"%s %b" $OLD_DEP_VERSION..$DEP_VERSION`
+          echo "List of commits:"
+          echo $LIST_OF_COMMITS
+          # Check if LIST_OF_COMMITS is empty
+          if [ -z "$LIST_OF_COMMITS" ]; then
+              echo "No commits found between $OLD_DEP_VERSION and $DEP_VERSION for $DEP_NAME"
+              continue  # Skip to the next dependency in the loop
+          fi
           LIST_OF_JIRA_TICKETS=`echo $LIST_OF_COMMITS | python3 -c "import re, sys; tasks=re.findall(r'\b[A-Z][A-Z0-9_]+-[1-9][0-9]*', sys.stdin.read()); tasks=set(tasks); print('--'.join(task for task in tasks))"`
           echo "List of JIRA tickets for $DEP_NAME:"
           echo $LIST_OF_JIRA_TICKETS
